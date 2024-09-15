@@ -1,8 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { CreateSocioDto } from './dto/create-socio.dto';
-import { UpdateSocioDto } from './dto/update-socio.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { CreateSocioDto } from './dto/create-socio.dto';
+import { UpdateSocioDto } from './dto/update-socio.dto';
 import { Socio } from './entities/socio.entity';
 
 @Injectable()
@@ -17,7 +17,9 @@ export class SocioService {
   }
 
   async findOne(id: number): Promise<Socio> {
-    const socio = await this.socioRepository.findOne({ where: { id } });
+    const socio = await this.socioRepository.findOne({
+      where: { id: id },
+    });
     if (!socio) {
       throw new NotFoundException(`Socio con ID ${id} no encontrado`);
     }
