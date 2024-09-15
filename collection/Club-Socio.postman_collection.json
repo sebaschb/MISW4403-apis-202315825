@@ -1,0 +1,795 @@
+{
+	"info": {
+		"_postman_id": "0c1649cc-0d86-4195-8f71-7c33511328f6",
+		"name": "Club-Socio",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "20683910"
+	},
+	"item": [
+		{
+			"name": "Agregar un socio a un club (válido)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 201\", function () {\r",
+							"    pm.response.to.have.status(201);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Response has valid structure\", function () {\r",
+							"    var jsonData = pm.response.json();\r",
+							"    pm.expect(jsonData).to.have.property('id');\r",
+							"    pm.expect(jsonData).to.have.property('nombre');\r",
+							"    pm.expect(jsonData).to.have.property('socios').that.is.an('array');\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Crear un nuevo club\r",
+							"pm.sendRequest({\r",
+							"    url: 'http://localhost:3000/club',\r",
+							"    method: 'POST',\r",
+							"    header: {\r",
+							"        'Content-Type': 'application/json'\r",
+							"    },\r",
+							"    body: {\r",
+							"        mode: 'raw',\r",
+							"        raw: JSON.stringify({\r",
+							"            \"nombre\": \"Club de Asociación Temporal\",\r",
+							"            \"fechaFundacion\": \"2020-01-01\",\r",
+							"            \"imagen\": \"imagen_asociacion.png\",\r",
+							"            \"descripcion\": \"Club para pruebas de asociación\"\r",
+							"        })\r",
+							"    }\r",
+							"}, function (err, response) {\r",
+							"    if (response) {\r",
+							"        var clubJsonData = response.json();\r",
+							"        pm.environment.set('clubId', clubJsonData.id);  // Guardar el id del club recién creado\r",
+							"\r",
+							"        // Crear el socio\r",
+							"        pm.sendRequest({\r",
+							"            url: 'http://localhost:3000/socio',\r",
+							"            method: 'POST',\r",
+							"            header: {\r",
+							"                'Content-Type': 'application/json'\r",
+							"            },\r",
+							"            body: {\r",
+							"                mode: 'raw',\r",
+							"                raw: JSON.stringify({\r",
+							"                    \"nombreUsuario\": \"Socio Temporal\",\r",
+							"                    \"email\": \"temporal_socio@example.com\",\r",
+							"                    \"fechaNacimiento\": \"1995-05-05\"\r",
+							"                })\r",
+							"            }\r",
+							"        }, function (err, response) {\r",
+							"            if (response) {\r",
+							"                var socioJsonData = response.json();\r",
+							"                pm.environment.set('socioId', socioJsonData.id);  // Guardar el id del socio recién creado\r",
+							"            }\r",
+							"        });\r",
+							"    }\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"socioId\": {{socioId}}\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/clubs/{{clubId}}/members",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"clubs",
+						"{{clubId}}",
+						"members"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Asociar un socio que no existe a un club (inválido)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 404\", function () {\r",
+							"    pm.response.to.have.status(404);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Response has error message\", function () {\r",
+							"    var jsonData = pm.response.json();\r",
+							"    pm.expect(jsonData).to.have.property('message');\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"socioId\": 9999\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/clubs/1/members",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"clubs",
+						"1",
+						"members"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Obtener todos los socios de un club (válido)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Response is an array\", function () {\r",
+							"    var jsonData = pm.response.json();\r",
+							"    pm.expect(jsonData).to.be.an('array');\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Crear un nuevo club\r",
+							"pm.sendRequest({\r",
+							"    url: 'http://localhost:3000/club',\r",
+							"    method: 'POST',\r",
+							"    header: {\r",
+							"        'Content-Type': 'application/json'\r",
+							"    },\r",
+							"    body: {\r",
+							"        mode: 'raw',\r",
+							"        raw: JSON.stringify({\r",
+							"            \"nombre\": \"Club de Asociación Temporal\",\r",
+							"            \"fechaFundacion\": \"2020-01-01\",\r",
+							"            \"imagen\": \"imagen_asociacion.png\",\r",
+							"            \"descripcion\": \"Club para pruebas de asociación\"\r",
+							"        })\r",
+							"    }\r",
+							"}, function (err, response) {\r",
+							"    if (response) {\r",
+							"        var clubJsonData = response.json();\r",
+							"        pm.environment.set('clubId', clubJsonData.id);  // Guardar el id del club recién creado\r",
+							"\r",
+							"        // Crear el socio\r",
+							"        pm.sendRequest({\r",
+							"            url: 'http://localhost:3000/socio',\r",
+							"            method: 'POST',\r",
+							"            header: {\r",
+							"                'Content-Type': 'application/json'\r",
+							"            },\r",
+							"            body: {\r",
+							"                mode: 'raw',\r",
+							"                raw: JSON.stringify({\r",
+							"                    \"nombreUsuario\": \"Socio Temporal\",\r",
+							"                    \"email\": \"temporal_socio@example.com\",\r",
+							"                    \"fechaNacimiento\": \"1995-05-05\"\r",
+							"                })\r",
+							"            }\r",
+							"        }, function (err, response) {\r",
+							"            if (response) {\r",
+							"                var socioJsonData = response.json();\r",
+							"                pm.environment.set('socioId', socioJsonData.id);  // Guardar el id del socio recién creado\r",
+							"\r",
+							"                // Asociar el socio al club\r",
+							"                pm.sendRequest({\r",
+							"                    url: 'http://localhost:3000/clubs/' + pm.environment.get('clubId') + '/members',\r",
+							"                    method: 'POST',\r",
+							"                    header: {\r",
+							"                        'Content-Type': 'application/json'\r",
+							"                    },\r",
+							"                    body: {\r",
+							"                        mode: 'raw',\r",
+							"                        raw: JSON.stringify({\r",
+							"                            \"socioId\": socioJsonData.id\r",
+							"                        })\r",
+							"                    }\r",
+							"                });\r",
+							"            }\r",
+							"        });\r",
+							"    }\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/clubs/{{clubId}}/members",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"clubs",
+						"{{clubId}}",
+						"members"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Obtener un socio que pertenece a un club (válido)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Response has valid socio details\", function () {\r",
+							"    var jsonData = pm.response.json();\r",
+							"    pm.expect(jsonData).to.have.property('id');\r",
+							"    pm.expect(jsonData).to.have.property('nombreUsuario');\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"pm.sendRequest({\r",
+							"    url: 'http://localhost:3000/club',\r",
+							"    method: 'POST',\r",
+							"    header: {\r",
+							"        'Content-Type': 'application/json'\r",
+							"    },\r",
+							"    body: {\r",
+							"        mode: 'raw',\r",
+							"        raw: JSON.stringify({\r",
+							"            \"nombre\": \"Club de Asociación Temporal\",\r",
+							"            \"fechaFundacion\": \"2020-01-01\",\r",
+							"            \"imagen\": \"imagen_asociacion.png\",\r",
+							"            \"descripcion\": \"Club para pruebas de asociación\"\r",
+							"        })\r",
+							"    }\r",
+							"}, function (err, response) {\r",
+							"    if (err) {\r",
+							"        console.error('Error al crear el club:', err);\r",
+							"    } else {\r",
+							"        var clubJsonData = response.json();\r",
+							"        console.log('Respuesta Club:', clubJsonData);  // Verificar la estructura de la respuesta\r",
+							"\r",
+							"        if (clubJsonData && clubJsonData.id) {\r",
+							"            pm.environment.set('clubId', clubJsonData.id);  // Guardar el id del club recién creado\r",
+							"\r",
+							"            // Crear el socio\r",
+							"            pm.sendRequest({\r",
+							"                url: 'http://localhost:3000/socio',\r",
+							"                method: 'POST',\r",
+							"                header: {\r",
+							"                    'Content-Type': 'application/json'\r",
+							"                },\r",
+							"                body: {\r",
+							"                    mode: 'raw',\r",
+							"                    raw: JSON.stringify({\r",
+							"                        \"nombreUsuario\": \"Socio Temporal\",\r",
+							"                        \"email\": \"temporal_socio_prueba@example.com\",\r",
+							"                        \"fechaNacimiento\": \"1995-05-05\"\r",
+							"                    })\r",
+							"                }\r",
+							"            }, function (err, response) {\r",
+							"                if (err) {\r",
+							"                    console.error('Error al crear el socio:', err);\r",
+							"                } else {\r",
+							"                    var socioJsonData = response.json();\r",
+							"                    console.log('Respuesta Socio:', socioJsonData);  // Verificar la estructura de la respuesta\r",
+							"\r",
+							"                    if (socioJsonData && socioJsonData.id) {\r",
+							"                        pm.environment.set('socioId', socioJsonData.id);  // Guardar el id del socio recién creado\r",
+							"\r",
+							"                        // Asociar el socio al club\r",
+							"                        pm.sendRequest({\r",
+							"                            url: 'http://localhost:3000/clubs/' + pm.environment.get('clubId') + '/members',\r",
+							"                            method: 'POST',\r",
+							"                            header: {\r",
+							"                                'Content-Type': 'application/json'\r",
+							"                            },\r",
+							"                            body: {\r",
+							"                                mode: 'raw',\r",
+							"                                raw: JSON.stringify({\r",
+							"                                    \"socioId\": socioJsonData.id\r",
+							"                                })\r",
+							"                            }\r",
+							"                        }, function (err, response) {\r",
+							"                            if (err) {\r",
+							"                                console.error('Error al asociar el socio al club:', err);\r",
+							"                            } else {\r",
+							"                                console.log('Socio asociado correctamente al club.');\r",
+							"                            }\r",
+							"                        });\r",
+							"                    } else {\r",
+							"                        console.error('No se encontró la propiedad \"id\" en la respuesta del socio.');\r",
+							"                    }\r",
+							"                }\r",
+							"            });\r",
+							"        } else {\r",
+							"            console.error('No se encontró la propiedad \"id\" en la respuesta del club.');\r",
+							"        }\r",
+							"    }\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/clubs/{{clubId}}/members/{{socioId}}",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"clubs",
+						"{{clubId}}",
+						"members",
+						"{{socioId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Obtener un socio que no es parte de un club (inválido)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 404\", function () {\r",
+							"    pm.response.to.have.status(404);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Response has error message\", function () {\r",
+							"    var jsonData = pm.response.json();\r",
+							"    pm.expect(jsonData).to.have.property('message');\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/clubs/1/members/9999",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"clubs",
+						"1",
+						"members",
+						"9999"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Actualizar los socios que pertenecen a un club (válido)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Response has valid structure\", function () {\r",
+							"    var jsonData = pm.response.json();\r",
+							"    pm.expect(jsonData).to.have.property('id');\r",
+							"    pm.expect(jsonData).to.have.property('socios').that.is.an('array');\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Crear un nuevo club\r",
+							"pm.sendRequest({\r",
+							"    url: 'http://localhost:3000/club',\r",
+							"    method: 'POST',\r",
+							"    header: {\r",
+							"        'Content-Type': 'application/json'\r",
+							"    },\r",
+							"    body: {\r",
+							"        mode: 'raw',\r",
+							"        raw: JSON.stringify({\r",
+							"            \"nombre\": \"Club de Asociación Temporal\",\r",
+							"            \"fechaFundacion\": \"2020-01-01\",\r",
+							"            \"imagen\": \"imagen_asociacion.png\",\r",
+							"            \"descripcion\": \"Club para pruebas de asociación\"\r",
+							"        })\r",
+							"    }\r",
+							"}, function (err, response) {\r",
+							"    if (response) {\r",
+							"        var clubJsonData = response.json();\r",
+							"        pm.environment.set('clubId', clubJsonData.id);  // Guardar el id del club recién creado\r",
+							"\r",
+							"        // Crear el primer socio\r",
+							"        pm.sendRequest({\r",
+							"            url: 'http://localhost:3000/socio',\r",
+							"            method: 'POST',\r",
+							"            header: {\r",
+							"                'Content-Type': 'application/json'\r",
+							"            },\r",
+							"            body: {\r",
+							"                mode: 'raw',\r",
+							"                raw: JSON.stringify({\r",
+							"                    \"nombreUsuario\": \"Socio1 Temporal\",\r",
+							"                    \"email\": \"temporal1_socio@example.com\",\r",
+							"                    \"fechaNacimiento\": \"1995-05-05\"\r",
+							"                })\r",
+							"            }\r",
+							"        }, function (err, response) {\r",
+							"            if (response) {\r",
+							"                var socio1JsonData = response.json();\r",
+							"                pm.environment.set('socioId1', socio1JsonData.id);  // Guardar el id del primer socio\r",
+							"\r",
+							"                // Crear el segundo socio\r",
+							"                pm.sendRequest({\r",
+							"                    url: 'http://localhost:3000/socio',\r",
+							"                    method: 'POST',\r",
+							"                    header: {\r",
+							"                        'Content-Type': 'application/json'\r",
+							"                    },\r",
+							"                    body: {\r",
+							"                        mode: 'raw',\r",
+							"                        raw: JSON.stringify({\r",
+							"                            \"nombreUsuario\": \"Socio2 Temporal\",\r",
+							"                            \"email\": \"temporal2_socio@example.com\",\r",
+							"                            \"fechaNacimiento\": \"1990-07-15\"\r",
+							"                        })\r",
+							"                    }\r",
+							"                }, function (err, response) {\r",
+							"                    if (response) {\r",
+							"                        var socio2JsonData = response.json();\r",
+							"                        pm.environment.set('socioId2', socio2JsonData.id);  // Guardar el id del segundo socio\r",
+							"\r",
+							"                        // Actualizar el body del PATCH con los IDs de los socios recién creados\r",
+							"                        var sociosIds = [socio1JsonData.id, socio2JsonData.id];\r",
+							"                        pm.environment.set('socioIdsBody', JSON.stringify(sociosIds));\r",
+							"                    }\r",
+							"                });\r",
+							"            }\r",
+							"        });\r",
+							"    }\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "PATCH",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{{socioIdsBody}}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/clubs/{{clubId}}/members",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"clubs",
+						"{{clubId}}",
+						"members"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Actualizar los socios de un club, con un socio inexistente (inválido)",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 404\", function () {\r",
+							"    pm.response.to.have.status(404);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Response has error message\", function () {\r",
+							"    var jsonData = pm.response.json();\r",
+							"    pm.expect(jsonData).to.have.property('message');\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "PATCH",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "[1, 9999]",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/clubs/1/members",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"clubs",
+						"1",
+						"members"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Eliminar un socio que es parte de un club (válido)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Crear un nuevo club\r",
+							"pm.sendRequest({\r",
+							"    url: 'http://localhost:3000/club',\r",
+							"    method: 'POST',\r",
+							"    header: {\r",
+							"        'Content-Type': 'application/json'\r",
+							"    },\r",
+							"    body: {\r",
+							"        mode: 'raw',\r",
+							"        raw: JSON.stringify({\r",
+							"            \"nombre\": \"Club para Eliminar\",\r",
+							"            \"fechaFundacion\": \"2020-01-01\",\r",
+							"            \"imagen\": \"imagen_eliminar.png\",\r",
+							"            \"descripcion\": \"Club para pruebas de eliminación\"\r",
+							"        })\r",
+							"    }\r",
+							"}, function (err, response) {\r",
+							"    if (response) {\r",
+							"        var clubJsonData = response.json();\r",
+							"        pm.environment.set('clubId', clubJsonData.id);  // Guardar el id del club recién creado\r",
+							"\r",
+							"        // Crear el socio\r",
+							"        pm.sendRequest({\r",
+							"            url: 'http://localhost:3000/socio',\r",
+							"            method: 'POST',\r",
+							"            header: {\r",
+							"                'Content-Type': 'application/json'\r",
+							"            },\r",
+							"            body: {\r",
+							"                mode: 'raw',\r",
+							"                raw: JSON.stringify({\r",
+							"                    \"nombreUsuario\": \"Socio Temporal\",\r",
+							"                    \"email\": \"temporal_socio@example.com\",\r",
+							"                    \"fechaNacimiento\": \"1995-05-05\"\r",
+							"                })\r",
+							"            }\r",
+							"        }, function (err, response) {\r",
+							"            if (response) {\r",
+							"                var socioJsonData = response.json();\r",
+							"                pm.environment.set('socioId', socioJsonData.id);  // Guardar el id del socio recién creado\r",
+							"\r",
+							"                // Asociar el socio al club\r",
+							"                pm.sendRequest({\r",
+							"                    url: 'http://localhost:3000/clubs/' + pm.environment.get('clubId') + '/members',\r",
+							"                    method: 'POST',\r",
+							"                    header: {\r",
+							"                        'Content-Type': 'application/json'\r",
+							"                    },\r",
+							"                    body: {\r",
+							"                        mode: 'raw',\r",
+							"                        raw: JSON.stringify({\r",
+							"                            \"socioId\": socioJsonData.id\r",
+							"                        })\r",
+							"                    }\r",
+							"                });\r",
+							"            }\r",
+							"        });\r",
+							"    }\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/clubs/{{clubId}}/members/{{socioId}}",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"clubs",
+						"{{clubId}}",
+						"members",
+						"{{socioId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Eliminar un socio que no es parte de un club (inválido)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 404\", function () {\r",
+							"    pm.response.to.have.status(404);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Response has error message\", function () {\r",
+							"    var jsonData = pm.response.json();\r",
+							"    pm.expect(jsonData).to.have.property('message');\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"packages": {},
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/clubs/1/members/9999",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"clubs",
+						"1",
+						"members",
+						"9999"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
